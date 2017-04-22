@@ -7,17 +7,19 @@ import java.util.Comparator;
 
 public class DistPreprocessSmall{
 
+   //Ids are made so that we dont have to reinitialize everytime the distance value to infinity.
    static class Distance{
-	int contractId;
-	int sourceId;
+	int contractId;//id for the vertex that is going to be contracted.
+	int sourceId; //it contains the id of vertex for which we will apply dijkstra while contracting.
 	
-	long distance;
+	long distance; //stores the value of distance while contracting.
 
-	int forwqueryId;
-	int revqueryId;
+	//used in query time for bidirectional dijkstra algo
+	int forwqueryId; //for forward search.
+	int revqueryId; //for backward search.
 
-	long queryDist;
-	long revDistance;
+	long queryDist; //for forward distance.
+	long revDistance; //for backward distance.
 
 	public Distance(){
 		this.contractId = -1;
@@ -33,11 +35,12 @@ public class DistPreprocessSmall{
 	}
     }
   
+    //in this ids are made for the same reason, to not have to reinitialize processed variable. for every query in bidirectional dijkstra.
     static class Processed{
-	boolean forwProcessed;
-	boolean revProcessed;
-	int forwqueryId;
-	int revqueryId;
+	boolean forwProcessed; //is processed in forward search.
+	boolean revProcessed; //is processed in backward search.
+	int forwqueryId; //id for forward search.
+	int revqueryId; //id for backward search.
 
 	public Processed(){
 		this.forwqueryId=-1;
@@ -45,8 +48,9 @@ public class DistPreprocessSmall{
 	}
     }
 	
+    //class for Vertex
     static class Vertex{
-	int vertexNum; 
+	int vertexNum;
 	ArrayList<Integer> inEdges; 
 	ArrayList<Long> inECost;	
 	ArrayList<Integer> outEdges; 
@@ -54,14 +58,16 @@ public class DistPreprocessSmall{
 	
 	int orderPos; //position of vertex in nodeOrderingQueue.
 	
-	boolean contracted;
+	boolean contracted; //is contracted
 	
 	Distance distance;
 	Processed processed;
 	
+	//parameters for computing importance.
 	int edgeDiff; //egdediff = sE - inE - outE.
 	long delNeighbors; // number of contracted neighbors.
 	int shortcutCover; // number of shotcuts to be introduces if this vertex is contracted.
+
 	long importance; //total importance edgediff + shortcutcover + delneighbors.
 
 	public Vertex(){
@@ -80,7 +86,8 @@ public class DistPreprocessSmall{
 	}
     }
     
-    //priorityQueue dealing with importance parameter.
+    
+    //priorityQueue (based on min heap) dealing with importance parameter.
     public static class PQIMPcomparator implements Comparator<Vertex>{
 	public int compare(Vertex node1, Vertex node2){
 		if(node1.importance > node2.importance){
@@ -94,7 +101,7 @@ public class DistPreprocessSmall{
     }
 
     
-    //priorityQueue dealing with distance while preprocessing time.
+    //priorityQueue (min heap) dealing with distance while preprocessing time.
     static class PriorityQueueComp implements Comparator<Vertex>{
 	public int compare(Vertex node1,Vertex node2){
 		if(node1.distance.distance>node2.distance.distance){
@@ -138,8 +145,9 @@ public class DistPreprocessSmall{
 	}
 	
 	
+	//function that will process.
 	private int [] preProcess(Vertex [] graph){
-		int [] nodeOrdering = new int[graph.length];
+		int [] nodeOrdering = new int[graph.length];//contains the vertices in the order they are contracted.
 		int extractNum=0; //stores the number of vertices that are contracted.
 		
 		while(PQImp.size()!=0){
@@ -155,13 +163,13 @@ public class DistPreprocessSmall{
 			vertex.orderPos = extractNum; 
 			extractNum = extractNum + 1;
 			
-			contractNode(graph,vertex,extractNum-1);
+			contractNode(graph,vertex,extractNum-1);//contraction part.
 		}
 		return nodeOrdering;
 	}
 
 	
-	//update the delNeighbors 
+	//update the neighbors of the contracted vertex that this this vertex is contracted.
 	private void calNeighbors(Vertex [] graph,ArrayList<Integer> inEdges, ArrayList<Integer> outEdges){
 		for(int i=0;i<inEdges.size();i++){
 			int temp =inEdges.get(i);
@@ -173,6 +181,7 @@ public class DistPreprocessSmall{
 			graph[temp].delNeighbors++;
 		}
 	}
+
 
 	//function to contract the node.
 	private void contractNode(Vertex [] graph, Vertex vertex, int contractId){
@@ -217,6 +226,7 @@ public class DistPreprocessSmall{
 			
 			dijkstra(graph,inVertex,max,contractId,i); //finds the shortest distances from the inVertex to all the outVertices.
 
+			//this code adds shortcuts.
 			for(int j=0;j<outEdges.size();j++){
 				int outVertex = outEdges.get(j);
 				long outcost = outECost.get(j);
@@ -277,6 +287,7 @@ public class DistPreprocessSmall{
 		}
 	}
 
+	//compare the ids whether id of source to target is same if not then consider the target vertex distance=infinity.
 	private boolean checkId(Vertex [] graph,int source,int target){
 		if(graph[source].distance.contractId != graph[target].distance.contractId || graph[source].distance.sourceId != graph[target].distance.sourceId){
 			return true;
@@ -291,9 +302,11 @@ public class DistPreprocessSmall{
 		return nodeOrdering;
 	}
     }
+
+
 			
      
-    //priorityQueue for bidirectional dijkstra algorithms. for forward search.
+    //priorityQueue(min heap) for bidirectional dijkstra algorithms.(for forward search)
     public static class forwComparator implements Comparator<Vertex>{
 	public int compare(Vertex vertex1, Vertex vertex2){
 		if(vertex1.distance.queryDist>vertex2.distance.queryDist){
@@ -306,7 +319,9 @@ public class DistPreprocessSmall{
 	}
     }
    
-    //priorityQueue for bidirectional dijkstra algorithms. for backward search.
+
+
+    //priorityQueue(min heap) for bidirectional dijkstra algorithms.(for backward search)
     public static class revComparator implements Comparator<Vertex>{
 	public int compare(Vertex vertex1, Vertex vertex2){
 		if( vertex1.distance.revDistance>vertex2.distance.revDistance){
@@ -318,7 +333,9 @@ public class DistPreprocessSmall{
 		return 0;
 	}
     }
+
     
+
     //class for bidirectional dijstra search.
     static class BidirectionalDijkstra{
 	Comparator<Vertex> forwComp = new forwComparator();
@@ -376,7 +393,9 @@ public class DistPreprocessSmall{
 		return estimate;
 	}
 
-	//function to relax edges.
+
+
+	//function to relax edges.(according to the direction forward or backward)
 	private void relaxEdges(Vertex [] graph, int vertex,String str,int [] nodeOrdering, int queryId){
 		if(str == "f"){
 			ArrayList<Integer> vertexList = graph[vertex].outEdges;
@@ -423,6 +442,7 @@ public class DistPreprocessSmall{
 		
     }
 		 
+
    
     //main function to run the program.
     public static void main(String args[]) {
