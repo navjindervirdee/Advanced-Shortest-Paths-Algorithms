@@ -5,15 +5,37 @@ import java.util.PriorityQueue;
 import java.util.Comparator;
 
 public class FriendSuggestion {
-	
+
+    static class Distance{
+	int queryId;
+	int distance;
+
+	public Distance(){
+		this.queryId=-1;
+		this.distance = Integer.MAX_VALUE;
+	}
+    }
+
+    static class Processed{
+	int queryId;
+	boolean processed;
+
+	public Processed(){
+		this.queryId=-1;
+		this.processed=false;
+	}
+    }
+
     static class Vertex{
 	int vertexNum;
-	ArrayList<Integer> adjList; //adjacent vertices of the vertex.
-	ArrayList<Integer> costList; //cost of adjacent edges of the vertex.
+	ArrayList<Integer> adjList;
+	ArrayList<Integer> costList;
+	//Distance distance;
+	//Processed processed;
 
-	int queuePos; //position of the vertex in the priorityQueue.
-	long dist; //distance is stored.
-	boolean processed; //is this vertex processed.
+	int queuePos;
+	long dist;
+	boolean processed;
 
 	public Vertex(){
 	}
@@ -22,9 +44,10 @@ public class FriendSuggestion {
 		this.vertexNum=vertexNum;
 		this.adjList = new ArrayList<Integer>();
 		this.costList = new ArrayList<Integer>();
+		//this.distance = new Distance();
+		//this.processed = new Processed();
 	}
 
-	//initializes the instance variables.
 	public void createGraph(Vertex [] graph, Vertex [] reverseGraph, int [] forwPriorityQ, int [] revPriorityQ){
 		for(int i=0;i<graph.length;i++){
 			graph[i].queuePos=i;
@@ -42,11 +65,20 @@ public class FriendSuggestion {
 
     }
 
-  
-    //implemented the priorityQueue by myself.
+   /* static class QueueComp implements Comparator<Vertex>{
+	public int compare(Vertex vertex1, Vertex vertex2){
+		if(vertex1.distance.distance>vertex2.distance.distance){
+			return 1;
+		}
+
+		if(vertex1.distance.distance<vertex2.distance.distance){
+			return -1;
+		}
+		return 0;
+	}
+    }*/
+
     static class PriorityQueue{
-	
-	//swap function maintaining the queuePos variable.
 	public void swap(Vertex [] graph, int [] priorityQ, int index1, int index2){
 		int temp = priorityQ[index1];
 
@@ -57,13 +89,10 @@ public class FriendSuggestion {
 		graph[temp].queuePos=index2;
 	}
 		
-	//makes the queue just put the source vertex at position zero ,target vertex has no role.
 	public void makeQueue(Vertex [] graph,int [] forwpriorityQ, int source, int target){
 		swap(graph, forwpriorityQ,0,source);
 	}
 
-
-	//extract the min elements i.e the first element.
 	public int extractMin(Vertex [] graph, int [] priorityQ, int extractNum){
 		int vertex = priorityQ[0];
 		int size = priorityQ.length-1-extractNum;
@@ -72,8 +101,6 @@ public class FriendSuggestion {
 		return vertex;
 	}
 
-	
-	//sift down the larger elements downwards.
 	public void siftDown(int index, Vertex [] graph, int [] priorityQ, int size){
 		int min = index;
 		if(2*index+1<size && graph[priorityQ[index]].dist > graph[priorityQ[2*index+1]].dist){
@@ -88,7 +115,6 @@ public class FriendSuggestion {
 		}
 	}
 	
-	//changes priority of the vertex.
 	public void changePriority(Vertex [] graph, int [] priorityQ, int index){
 		if((index-1)/2 > -1 && graph[priorityQ[index]].dist < graph[priorityQ[(index-1)/2]].dist){
 			swap(graph,priorityQ,index,(index-1)/2);
@@ -96,82 +122,133 @@ public class FriendSuggestion {
 		}
 	}
     }
-
-
-    //function to relax the edges of the vertex.   
+   
     private static void relaxEdges(Vertex [] graph, int vertex, int [] priorityQ, PriorityQueue queue,int queryId){
 	ArrayList<Integer> vertexList = graph[vertex].adjList;
 	ArrayList<Integer> costList = graph[vertex].costList;
 	graph[vertex].processed = true;
+	//graph[vertex].processed.queryId = queryId;
+	
+	
 	
 	for(int i=0;i<vertexList.size();i++){
 		int temp = vertexList.get(i);
 		int cost = costList.get(i);
-		
+		/*if(graph[temp].distance.queryId != graph[vertex].distance.queryId || graph[temp].distance.distance>graph[vertex].distance.distance + cost){
+			graph[temp].distance.distance = graph[vertex].distance.distance + cost;	
+			//graph[temp].distance.queryId = queryId ;	
+			queue.changePriority(graph,priorityQ,graph[temp].queuePos);
+			//queue.remove(graph[temp]);
+			//queue.add(graph[temp]);
+		}*/
 		if(graph[temp].dist>graph[vertex].dist + cost){
 			graph[temp].dist = graph[vertex].dist + cost;	
+			//graph[temp].distance.queryId = queryId ;	
 			queue.changePriority(graph,priorityQ,graph[temp].queuePos);
+			//queue.remove(graph[temp]);
+			//queue.add(graph[temp]);
 		}
 	}
     }
 
-
-    //bidirectional dijkstra implemented.
+    //static QueueComp comp = new QueueComp();
+    //static PriorityQueue<Vertex> forwQ = new PriorityQueue<Vertex>(comp); 		
+    //static PriorityQueue<Vertex> revQ = new PriorityQueue<Vertex>(comp);
+   
     public static long computeDistance(Vertex [] graph, Vertex [] reverseGraph, int s, int t,int queryId){
-	PriorityQueue queue = new PriorityQueue(); //created priotityQueue object.
+	//forwQ.clear();
+	//revQ.clear();
+	
+	//graph[s].distance.distance = 0;
+	//graph[s].distance.queryId = queryId;
+	
+	//reverseGraph[t].distance.distance = 0;
+	//reverseGraph[t].distance.queryId = queryId;
+	
 
-	int [] forwPriorityQ = new int[graph.length]; //priorityQ for forward search.
-	int [] revPriorityQ = new int[graph.length]; //priorityQ for backward search
+	//forwQ.add(graph[s]);
+	//revQ.add(reverseGraph[t]);
+
+	PriorityQueue queue = new PriorityQueue();
+	int [] forwPriorityQ = new int[graph.length];
+	int [] revPriorityQ = new int[graph.length];
 
 	Vertex vertex = new Vertex();
-	vertex.createGraph(graph,reverseGraph,forwPriorityQ,revPriorityQ); //reinitializes the graph for each query.
+	vertex.createGraph(graph,reverseGraph,forwPriorityQ,revPriorityQ);
 
-	graph[s].dist=0; //initialized source distance zero.
-	reverseGraph[t].dist=0; //initialized target distance to zero.
-	
-	queue.makeQueue(graph,forwPriorityQ,s,t); //makes forwardQ.
-	queue.makeQueue(reverseGraph,revPriorityQ,t,s); // makes revQ.
+	graph[s].dist=0;
+	reverseGraph[t].dist=0;
+	queue.makeQueue(graph,forwPriorityQ,s,t);
+	queue.makeQueue(reverseGraph,revPriorityQ,t,s);
 
-	ArrayList<Integer> forgraphprocessedVertices = new ArrayList<Integer>(); //to store vertices processed in the forward search.
-	ArrayList<Integer> revgraphprocessedVertices = new ArrayList<Integer>(); //to store vertices processed in the backward search.
+
+
+	ArrayList<Integer> forgraphprocessedVertices = new ArrayList<Integer>();
+	ArrayList<Integer> revgraphprocessedVertices = new ArrayList<Integer>();
 	
+	
+
 	for(int i=0;i<graph.length;i++){
-		int vertex1 = queue.extractMin(graph,forwPriorityQ,i); //extracted the vertex with min distance.
+		int vertex1 = queue.extractMin(graph,forwPriorityQ,i);
 		if(graph[vertex1].dist==Integer.MAX_VALUE){
 			continue;
 		}
-		relaxEdges(graph,vertex1,forwPriorityQ,queue,queryId); //relaxed the edges.
-		forgraphprocessedVertices.add(vertex1); //added in the forward lsit.
+		relaxEdges(graph,vertex1,forwPriorityQ,queue,queryId);
+		forgraphprocessedVertices.add(vertex1);
 
-		//check wether we have found vertex processed both in forward and backward then return the shortest path.
 		if(reverseGraph[vertex1].processed){
 			return shortestPath(graph,reverseGraph,forgraphprocessedVertices,revgraphprocessedVertices,queryId);
 		}
 		
 
-		int revVertex = queue.extractMin(reverseGraph,revPriorityQ,i); //extracted min distance vertex in backward search.
+		int revVertex = queue.extractMin(reverseGraph,revPriorityQ,i);
 		if(reverseGraph[revVertex].dist==Integer.MAX_VALUE){
 			continue;
 		}
-		relaxEdges(reverseGraph,revVertex,revPriorityQ,queue,queryId); //relaxed edges in the backward search.
-		revgraphprocessedVertices.add(revVertex); //added the vertex to backward search processed list.
+		relaxEdges(reverseGraph,revVertex,revPriorityQ,queue,queryId);
+		revgraphprocessedVertices.add(revVertex);
 		
-		//check whether the vertex is processed in forward search as well then return shortest distance.
 		if(graph[revVertex].processed){
 			return shortestPath(graph,reverseGraph,forgraphprocessedVertices,revgraphprocessedVertices,queryId);
 		}
+		
 	}
 	
+	/*while(forwQ.size()!=0 || revQ.size()!=0){
+		
+		Vertex vertex = forwQ.poll();
+		if(vertex!=null){
+			relaxEdges(graph,vertex.vertexNum,forwQ,queryId);
+			forgraphprocessedVertices.add(vertex.vertexNum);
+
+			if(reverseGraph[vertex.vertexNum].processed.queryId==queryId && reverseGraph[vertex.vertexNum].processed.processed){
+				return shortestPath(graph,reverseGraph,forgraphprocessedVertices,revgraphprocessedVertices,queryId);
+			}
+		}
+
+		Vertex revVertex = revQ.poll();
+		if(revVertex!=null){
+			relaxEdges(reverseGraph,revVertex.vertexNum,revQ,queryId);
+			revgraphprocessedVertices.add(revVertex.vertexNum);
+		
+			if(graph[revVertex.vertexNum].processed.queryId==queryId && graph[revVertex.vertexNum].processed.processed){
+				return shortestPath(graph,reverseGraph,forgraphprocessedVertices,revgraphprocessedVertices,queryId);
+		}
+		}
+		
+	}*/
 	return -1;
     }
 
 
-    //function to calculate shortest distance.
     private static long shortestPath(Vertex [] graph, Vertex [] reverseGraph, ArrayList<Integer> forgraphprocessedVertices, ArrayList<Integer> revgraphprocessedVertices,int queryId){
 	long distance = Integer.MAX_VALUE;
 	
 	for(int i=0;i<forgraphprocessedVertices.size();i++){
 		int vertex = forgraphprocessedVertices.get(i);
+		/*if(reverseGraph[vertex].distance.queryId!=queryId || reverseGraph[vertex].distance.distance + graph[vertex].distance.distance>=Integer.MAX_VALUE){
+			continue;
+		}*/
 		if(reverseGraph[vertex].dist + graph[vertex].dist>=Integer.MAX_VALUE){
 			continue;
 		}
@@ -183,6 +260,9 @@ public class FriendSuggestion {
 	
 	for(int i=0;i<revgraphprocessedVertices.size();i++){
 		int vertex = revgraphprocessedVertices.get(i);
+		/*if(graph[vertex].distance.queryId!=queryId || reverseGraph[vertex].distance.distance + graph[vertex].distance.distance>=Integer.MAX_VALUE){
+			continue;
+		}*/
 		if(reverseGraph[vertex].dist + graph[vertex].dist>=Integer.MAX_VALUE){
 			continue;
 		}
@@ -196,16 +276,14 @@ public class FriendSuggestion {
     }
     
 
-
-    //main function to drive the program.
     public static void main(String args[]) {
 	Scanner in = new Scanner(System.in);
-        int n = in.nextInt(); //number of vertices.
-	int m = in.nextInt(); //number of edges.
+        int n = in.nextInt();
+	int m = in.nextInt();
 
-	Vertex vertex = new Vertex(); 
-	Vertex [] graph = new Vertex[n]; //graph for forward search.
-	Vertex [] reverseGraph = new Vertex[n]; //graph for backward search.
+	Vertex vertex = new Vertex();
+	Vertex [] graph = new Vertex[n];
+	Vertex [] reverseGraph = new Vertex[n];
 
 	for(int i=0;i<n;i++){
 		graph[i]=new Vertex(i);
@@ -216,7 +294,7 @@ public class FriendSuggestion {
 		int u, v;
 		int w;
 		u= in.nextInt();
-		v=in.nextInt(); 
+		v=in.nextInt();
 		w=in.nextInt();
 
 		graph[u-1].adjList.add(v-1);
@@ -226,7 +304,7 @@ public class FriendSuggestion {
 		reverseGraph[v-1].costList.add(w);
 	}
 
-	int q = in.nextInt(); //number of queries.
+	int q = in.nextInt();
 
         for (int i = 0; i < q; i++) {
             int s, t;

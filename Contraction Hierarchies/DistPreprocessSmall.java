@@ -287,7 +287,7 @@ public class DistPreprocessSmall{
 		}
 	}
 
-	//compare the ids whether id of source to target is same if not then consider the target vertex distance=infinity.
+	/compare the ids whether id of source to target is same if not then consider the target vertex distance=infinity.
 	private boolean checkId(Vertex [] graph,int source,int target){
 		if(graph[source].distance.contractId != graph[target].distance.contractId || graph[source].distance.sourceId != graph[target].distance.sourceId){
 			return true;
