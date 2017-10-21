@@ -1,3 +1,5 @@
+//Program to implement the Bi-Directional Dijkstra Algorithm.
+
 import java.util.Scanner;
 import java.util.ArrayList;
 import java.util.Arrays;
