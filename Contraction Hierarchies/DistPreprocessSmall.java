@@ -1,3 +1,5 @@
+//Program to implement Contraction Heirarchies Algorithm
+
 import java.util.Scanner;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -7,19 +9,20 @@ import java.util.Comparator;
 
 public class DistPreprocessSmall{
 
-   //Ids are made so that we dont have to reinitialize everytime the distance value to infinity.
    static class Distance{
-	int contractId;//id for the vertex that is going to be contracted.
-	int sourceId; //it contains the id of vertex for which we will apply dijkstra while contracting.
+	//Ids are made so that we dont have to reinitialize everytime the distance value to infinity.
+
+	int contractId;		//id for the vertex that is going to be contracted.
+	int sourceId;           //it contains the id of vertex for which we will apply dijkstra while contracting.
 	
-	long distance; //stores the value of distance while contracting.
+	long distance; 		//stores the value of distance while contracting.
 
 	//used in query time for bidirectional dijkstra algo
-	int forwqueryId; //for forward search.
-	int revqueryId; //for backward search.
+	int forwqueryId; 	//for forward search.
+	int revqueryId; 	//for backward search.
 
-	long queryDist; //for forward distance.
-	long revDistance; //for backward distance.
+	long queryDist; 	//for forward distance.
+	long revDistance; 	//for backward distance.
 
 	public Distance(){
 		this.contractId = -1;
@@ -37,10 +40,10 @@ public class DistPreprocessSmall{
   
     //in this ids are made for the same reason, to not have to reinitialize processed variable. for every query in bidirectional dijkstra.
     static class Processed{
-	boolean forwProcessed; //is processed in forward search.
-	boolean revProcessed; //is processed in backward search.
-	int forwqueryId; //id for forward search.
-	int revqueryId; //id for backward search.
+	boolean forwProcessed; 	//is processed in forward search.
+	boolean revProcessed; 	//is processed in backward search.
+	int forwqueryId; 	//id for forward search.
+	int revqueryId; 	//id for backward search.
 
 	public Processed(){
 		this.forwqueryId=-1;
@@ -50,25 +53,25 @@ public class DistPreprocessSmall{
 	
     //class for Vertex
     static class Vertex{
-	int vertexNum;
-	ArrayList<Integer> inEdges; 
-	ArrayList<Long> inECost;	
-	ArrayList<Integer> outEdges; 
-	ArrayList<Long> outECost;
+	int vertexNum;			//id of the vertex.
+	ArrayList<Integer> inEdges; 	//list of incoming edges to this vertex.
+	ArrayList<Long> inECost;	//list of incoming edges cost or distance.	
+	ArrayList<Integer> outEdges; 	//list of outgoing edges from this vertex.
+	ArrayList<Long> outECost;	//list of out edges cost or distance.
 	
-	int orderPos; //position of vertex in nodeOrderingQueue.
+	int orderPos; 			//position of vertex in nodeOrderingQueue.
 	
-	boolean contracted; //is contracted
+	boolean contracted; 		//to check if vertex is contracted
 	
 	Distance distance;
 	Processed processed;
 	
 	//parameters for computing importance.
-	int edgeDiff; //egdediff = sE - inE - outE.
-	long delNeighbors; // number of contracted neighbors.
-	int shortcutCover; // number of shotcuts to be introduces if this vertex is contracted.
+	int edgeDiff; 			//egdediff = sE - inE - outE.
+	long delNeighbors; 		// number of contracted neighbors.
+	int shortcutCover; 		// number of shotcuts to be introduces if this vertex is contracted.
 
-	long importance; //total importance edgediff + shortcutcover + delneighbors.
+	long importance; 		//total importance = edgediff + shortcutcover + delneighbors.
 
 	public Vertex(){
 	}
@@ -119,10 +122,10 @@ public class DistPreprocessSmall{
     //all functions dealing with preprocessing in this class.
     static class PreProcess{
 	Comparator<Vertex> comp = new PQIMPcomparator();
-	PriorityQueue<Vertex> PQImp ;
+	PriorityQueue<Vertex> PQImp;  	//queue for importance parameter.
 
 	Comparator<Vertex> PQcomp = new PriorityQueueComp();
-	PriorityQueue<Vertex> queue ;
+	PriorityQueue<Vertex> queue;	//queue for distance parameter. 
 	
 	
 	//calculate initial importance for all vertices.
@@ -145,10 +148,10 @@ public class DistPreprocessSmall{
 	}
 	
 	
-	//function that will process.
+	//function that will pre-process the graph.
 	private int [] preProcess(Vertex [] graph){
-		int [] nodeOrdering = new int[graph.length];//contains the vertices in the order they are contracted.
-		int extractNum=0; //stores the number of vertices that are contracted.
+		int [] nodeOrdering = new int[graph.length];	//contains the vertices in the order they are contracted.
+		int extractNum=0; 				//stores the number of vertices that are contracted.
 		
 		while(PQImp.size()!=0){
 			Vertex vertex = (Vertex)PQImp.poll();
@@ -192,10 +195,10 @@ public class DistPreprocessSmall{
 		
 		vertex.contracted=true;
 		
-		long inMax = 0;//stores the max distance out of uncontracted inVertices of the given vertex.
-		long outMax =0;//stores the max distance out of uncontracted outVertices of the given vertex.
+		long inMax = 0;						//stores the max distance out of uncontracted inVertices of the given vertex.
+		long outMax =0;						//stores the max distance out of uncontracted outVertices of the given vertex.
 
-		calNeighbors(graph,vertex.inEdges,vertex.outEdges);//update the given vertex's neighbors about that the given vertex is contracted.
+		calNeighbors(graph,vertex.inEdges,vertex.outEdges);	//update the given vertex's neighbors about that the given vertex is contracted.
 			
 		for(int i=0; i<inECost.size();i++){
 			if(graph[inEdges.get(i)].contracted){
@@ -224,7 +227,7 @@ public class DistPreprocessSmall{
 			}
 			long incost = inECost.get(i);
 			
-			dijkstra(graph,inVertex,max,contractId,i); //finds the shortest distances from the inVertex to all the outVertices.
+			dijkstra(graph,inVertex,max,contractId,i); 	//finds the shortest distances from the inVertex to all the outVertices.
 
 			//this code adds shortcuts.
 			for(int j=0;j<outEdges.size();j++){
@@ -287,7 +290,7 @@ public class DistPreprocessSmall{
 		}
 	}
 
-	/compare the ids whether id of source to target is same if not then consider the target vertex distance=infinity.
+	//compare the ids whether id of source to target is same if not then consider the target vertex distance=infinity.
 	private boolean checkId(Vertex [] graph,int source,int target){
 		if(graph[source].distance.contractId != graph[target].distance.contractId || graph[source].distance.sourceId != graph[target].distance.sourceId){
 			return true;
@@ -441,22 +444,22 @@ public class DistPreprocessSmall{
 	}
 		
     }
-		 
 
-   
     //main function to run the program.
     public static void main(String args[]) {
         Scanner in = new Scanner(System.in);
-        int n = in.nextInt();
-        int m = in.nextInt();
+        int n = in.nextInt();	//number of vertices in the graph.
+        int m = in.nextInt();	//number of edges in the graph.
 
 	Vertex vertex = new Vertex();
 	Vertex [] graph = new Vertex[n];
 	
+	//initialize the graph.
 	for(int i=0;i<n;i++){
 		graph[i] = new Vertex(i);
 	}
 
+	//get edges
         for (int i = 0; i < m; i++) {
             int x, y;
             Long c;
