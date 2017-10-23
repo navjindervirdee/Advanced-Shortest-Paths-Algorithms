@@ -1,4 +1,4 @@
-//Program to implement Contraction Heirarchies Algorithm
+//Program to implement Contraction Hierarchies Algorithm
 
 import java.util.Scanner;
 import java.util.ArrayList;
