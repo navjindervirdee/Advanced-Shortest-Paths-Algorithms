@@ -1,4 +1,4 @@
-//Program to implement Contraction Hierarchies Algorithm
+//Program to implement Contraction Hierarchies Algorithm.
 
 import java.util.Scanner;
 import java.util.ArrayList;
@@ -38,7 +38,7 @@ public class DistPreprocessSmall{
 	}
     }
   
-    //in this ids are made for the same reason, to not have to reinitialize processed variable. for every query in bidirectional dijkstra.
+    //in this ids are made for the same reason, to not have to reinitialize processed variable for every query in bidirectional dijkstra.
     static class Processed{
 	boolean forwProcessed; 	//is processed in forward search.
 	boolean revProcessed; 	//is processed in backward search.
@@ -51,7 +51,7 @@ public class DistPreprocessSmall{
 	}
     }
 	
-    //class for Vertex
+    //class for Vertex of a graph.
     static class Vertex{
 	int vertexNum;			//id of the vertex.
 	ArrayList<Integer> inEdges; 	//list of incoming edges to this vertex.
@@ -66,10 +66,10 @@ public class DistPreprocessSmall{
 	Distance distance;
 	Processed processed;
 	
-	//parameters for computing importance.
-	int edgeDiff; 			//egdediff = sE - inE - outE.
-	long delNeighbors; 		// number of contracted neighbors.
-	int shortcutCover; 		// number of shotcuts to be introduces if this vertex is contracted.
+	//parameters for computing importance according to which we will contract the vertices. Vertex wih least importance wil be contracted first.
+	int edgeDiff; 			//egdediff = sE - inE - outE. (sE=inE*outE , i.e number of shortcuts that we may have to add.)
+	long delNeighbors; 		//number of contracted neighbors.
+	int shortcutCover; 		//number of shortcuts to be introduced if this vertex is contracted.
 
 	long importance; 		//total importance = edgediff + shortcutcover + delneighbors.
 
@@ -155,8 +155,9 @@ public class DistPreprocessSmall{
 		
 		while(PQImp.size()!=0){
 			Vertex vertex = (Vertex)PQImp.poll();
-			computeImportance(graph,vertex);//recompute importance before contractingthe vertex.
+			computeImportance(graph,vertex);	//recompute importance before contracting the vertex.
 			
+			//if the vertex's recomputed importance is still minimum then contract it.
 			if(PQImp.size()!=0 && vertex.importance > PQImp.peek().importance){
 				PQImp.add(vertex);
 				continue;
@@ -166,13 +167,14 @@ public class DistPreprocessSmall{
 			vertex.orderPos = extractNum; 
 			extractNum = extractNum + 1;
 			
-			contractNode(graph,vertex,extractNum-1);//contraction part.
+			//contraction part.
+			contractNode(graph,vertex,extractNum-1);
 		}
 		return nodeOrdering;
 	}
 
 	
-	//update the neighbors of the contracted vertex that this this vertex is contracted.
+	//update the neighbors of the contracted vertex that this vertex is contracted.
 	private void calNeighbors(Vertex [] graph,ArrayList<Integer> inEdges, ArrayList<Integer> outEdges){
 		for(int i=0;i<inEdges.size();i++){
 			int temp =inEdges.get(i);
@@ -218,7 +220,7 @@ public class DistPreprocessSmall{
 			}
 		}
 
-		long max = inMax+outMax; //total max distance.
+		long max = inMax+outMax; 				//total max distance.
 		
 		for(int i=0;i<inEdges.size();i++){
 			int inVertex = inEdges.get(i);
@@ -300,7 +302,7 @@ public class DistPreprocessSmall{
 
 	//main function of this class.
 	public int [] processing(Vertex [] graph){
-		computeImportance(graph);//find initial importance by traversing all vertices.
+		computeImportance(graph);		//find initial importance by traversing all vertices.
 		int [] nodeOrdering = preProcess(graph);
 		return nodeOrdering;
 	}
